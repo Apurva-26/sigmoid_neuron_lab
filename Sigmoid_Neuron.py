@@ -196,8 +196,10 @@ def animate_decision_boundary(X, y, history):
         interval=1,
         repeat=False
     )
-
-    plt.show()
+    history = history[::10000]
+    ani.save('decision_boundary.mp4', writer='ffmpeg', fps=30)
+    plt.close()
+    print("Saved decision_boundary.gif — open it in the file explorer to view.")
 
 def plot_loss_over_epochs(loss_history):
     epochs = range(1, len(loss_history) + 1)
@@ -208,7 +210,9 @@ def plot_loss_over_epochs(loss_history):
     plt.ylabel("BCE Loss")
     plt.title("Loss Over Epochs")
     plt.legend()
-    plt.show()
+    plt.savefig('loss.png')
+    plt.close()
+    print("Saved loss.png — open it in the file explorer to view.")
 
 def plot_weight_change_over_epochs(max_weight_change_history):
     epochs = range(1, len(max_weight_change_history) + 1)
@@ -219,7 +223,9 @@ def plot_weight_change_over_epochs(max_weight_change_history):
     plt.ylabel("Max Absolute Weight Change")
     plt.title("Weight Change Over Epochs")
     plt.legend()
-    plt.show()
+    plt.savefig('weight_change.png')
+    plt.close()
+    print("Saved weight_change.png — open it in the file explorer to view.")
 
 def show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features):
     print("\n--- Graph Selection ---")
