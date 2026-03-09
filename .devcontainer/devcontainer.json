@@ -1,7 +1,7 @@
 {
     "name": "Sigmoid Neuron Explorer",
     "image": "mcr.microsoft.com/devcontainers/python:3.11",
-    "postCreateCommand": "pip install plotly",
+    "postCreateCommand": "pip install plotly numpy matplotlib",
     "customizations": {
         "vscode": {
             "extensions": [

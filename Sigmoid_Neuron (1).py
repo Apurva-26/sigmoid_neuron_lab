@@ -236,7 +236,7 @@ def animate_decision_boundary(X, y, history):
         )]
     )
 
-    fig.write_html('decision_boundary.html')
+    fig.write_html('index.html')
     print("Saved decision_boundary.html — right-click the file and select 'Open with Live Server' or open in a browser.")
 
 def plot_loss_over_epochs(loss_history):
