@@ -75,7 +75,7 @@ def set_up_weights(num_features):
         weights.append(0.0)
     return weights
 
-def perceptron(path, learning_rate, epochs, label):
+def sigmoid(path, learning_rate, epochs, label):
     x, y, feature_names, label_name = load_csv(path)
     x_train, y_train, x_test, y_test = train_test_split(x, y, test_ratio=0.3, seed_value=75)
 
@@ -127,7 +127,7 @@ def perceptron(path, learning_rate, epochs, label):
                 all_changes.append(change_value)
         max_weight_change_history.append(max(all_changes))
 
-    show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features)
+    show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, path)
 
 def update(frame, history, ax, line):
         weights, bias = history[frame]
@@ -145,7 +145,7 @@ def update(frame, history, ax, line):
 
         return line,
 
-def animate_decision_boundary(X, y, history):
+def animate_decision_boundary(X, y, history, Dataset):
     features = np.array(X)
     labels = np.array(y)
 
@@ -216,7 +216,7 @@ def animate_decision_boundary(X, y, history):
     )
 
     fig.update_layout(
-        title='Perceptron Decision Boundary (After Each Update)',
+        title='Sigmoid Decision Boundary (After Each Update)',
         xaxis=dict(range=[x_min, x_max], title='Feature 1'),
         yaxis=dict(range=[y_min, y_max], title='Feature 2'),
         updatemenus=[dict(
@@ -265,7 +265,7 @@ def plot_weight_change_over_epochs(max_weight_change_history):
     plt.close()
     print("Saved weight_change.png — open it in the file explorer to view.")
 
-def show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features):
+def show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, dataset):
     print("\n--- Graph Selection ---")
     print("1. Decision Boundary (animated)")
     print("2. Loss Over Epochs")
@@ -276,21 +276,21 @@ def show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_c
 
     if choice == "1":
         if num_features == 2:
-            animate_decision_boundary(x_train, y_train, weight_history)
+            animate_decision_boundary(x_train, y_train, weight_history, dataset)
         else:
             print("Decision boundary only available for 2 features.")
-        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, dataset)
     elif choice == "2":
         plot_loss_over_epochs(loss_history)
-        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, dataset)
     elif choice == "3":
         plot_weight_change_over_epochs(max_weight_change_history)
-        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, dataset)
     elif choice == "4":
         main()
     else:
         print("Invalid choice. Please enter 1, 2, 3, or 4.")
-        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, dataset)
 
 def pickPath():
     print("Please select a dataset:")
@@ -324,6 +324,6 @@ def main():
         learning_rate = 0.01  # Update with your desired learning rate
         epochs = 1000 # Update with your desired number of epochs
 
-        perceptron(path, learning_rate, epochs, label="label")
+        sigmoid(path, learning_rate, epochs, label="label")
     
 main()
