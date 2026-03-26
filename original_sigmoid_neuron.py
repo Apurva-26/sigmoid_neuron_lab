@@ -38,27 +38,22 @@ def get_data_list(data, indexes):
         lst.append(data[i])
     return lst
 
-def train_test_split(features, labels, seed_value):
+def train_test_split(features, labels, test_ratio, seed_value):
     index = []
     length = len(features)
     for i in range(length):
         index.append(i)
-    
     seed = random.Random(seed_value)
     seed.shuffle(index)
-    train_cut = int(0.7*length)
-    validation_cut = int(0.9*length)
-    train_index = index[:train_cut]
-    test_index = index[validation_cut:]
-    validation_index = index[train_cut:validation_cut]
+    cut = int(length * (1 - test_ratio))
+    train_index = index[:cut]
+    test_index = index[cut:]
     features_train = get_data_list(features, train_index)
+    print(features_train)
     labels_train = get_data_list(labels, train_index)
     features_test = get_data_list(features, test_index)
     labels_test = get_data_list(labels, test_index)
-    features_val = get_data_list(features, validation_index)
-    labels_val = get_data_list(labels, validation_index)
-    return features_train, labels_train, features_test, labels_test, features_val, labels_val
-
+    return features_train, labels_train, features_test, labels_test
 
 def activation_function(z):
     prediction = 1/(1 + np.exp(-z))
@@ -85,7 +80,7 @@ def sigmoid(path, learning_rate, epochs, label):
     x, y, feature_names, label_name = load_csv(path)
     folder_name = os.path.splitext(os.path.basename(path))[0]
     os.makedirs(folder_name, exist_ok=True)
-    x_train, y_train, x_test, y_test, x_val, y_val = train_test_split(x, y, seed_value=75)
+    x_train, y_train, x_test, y_test = train_test_split(x, y, test_ratio=0.3, seed_value=75)
 
     #Beginning values for weights and bias
     num_features = len(x_train[0])
@@ -93,10 +88,8 @@ def sigmoid(path, learning_rate, epochs, label):
     bias = 0.0
     weight_history = []
     loss_history = []
-    val_loss_history = []
     max_weight_change_history = []  
-    p_counter = 0
-    weight_p_counter = 0
+
     for epoch in range(epochs):
         weightChangeList = []
         lossList = []
@@ -106,7 +99,6 @@ def sigmoid(path, learning_rate, epochs, label):
             true_label = y_train[i]
             pred_label = predict_one_vector(features_row, weights, bias)
             # Update each weight
-            #EDIT THE THINGY BELOW THIS??=====================================================================
             for j in range(num_features):
                 change_in_weights = learning_rate * (pred_label - true_label) * features_row[j]
                 weightChangeList[i].append(abs(change_in_weights))
@@ -118,7 +110,6 @@ def sigmoid(path, learning_rate, epochs, label):
             bias -= change_in_bias
 
             weight_history.append((weights.copy(), bias))
-
         for k in range(len(x_train)):
             features_row = x_train[k]
             true_label = y_train[k]
@@ -137,44 +128,9 @@ def sigmoid(path, learning_rate, epochs, label):
         for change_row in weightChangeList:
             for change_value in change_row:
                 all_changes.append(change_value)
-        epoch_max_change = max(all_changes)
         max_weight_change_history.append(max(all_changes))
 
-
-
-
-        val_lossList = []
-        for k in range(len(x_val)):
-            val_features_row = x_val[k]
-            val_true_label = y_val[k]
-            val_pred_label = predict_one_vector(val_features_row, weights, bias)
-            if(val_true_label == 1):
-                error = -1 * np.log(val_pred_label)
-                val_lossList.append(error)
-            elif(val_true_label == 0):
-                error = -1 * np.log(1 - val_pred_label)
-                val_lossList.append(error)
-
-        # Compute epoch-level summaries for plotting
-        val_bce = sum(val_lossList) / len(val_lossList)
-        val_loss_history.append(val_bce)
-
-        if epoch_bce <= 0.1:
-            p_counter+=1
-        else:
-            p_counter = 0
-        
-        if epoch_max_change < 0.01:
-            weight_p_counter+=1
-        else:            
-            weight_p_counter = 0
-        
-        if p_counter > 10 and weight_p_counter > 10:
-            print(f"Early stopping epoch: {epoch} \nLoss: {epoch_bce:.4f}")
-            break
-
-    show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, folder_name)
-
+    show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, folder_name)
 
 def update(frame, history, ax, line):
         weights, bias = history[frame]
@@ -190,7 +146,7 @@ def update(frame, history, ax, line):
         else:
             print("No update")
 
-        return line
+        return line,
 
 def animate_decision_boundary(X, y, history, output_folder):
     features = np.array(X)
@@ -286,12 +242,11 @@ def animate_decision_boundary(X, y, history, output_folder):
     fig.write_html(os.path.join(output_folder, 'decision_boundary.html'))
     print("Saved decision_boundary.html — right-click the file and select 'Open with Live Server' or open in a browser.")
 
-def plot_loss_over_epochs(loss_history, val_loss_history, output_folder):
+def plot_loss_over_epochs(loss_history, output_folder):
     epochs = range(1, len(loss_history) + 1)
-    val_epochs = range(1, len(val_loss_history) + 1)
+
     plt.figure(figsize=(8, 5))
-    plt.plot(epochs, loss_history, label="Train BCE Loss")
-    plt.plot(val_epochs, val_loss_history, label="Val BEC Loss")
+    plt.plot(epochs, loss_history, label="BCE Loss")
     plt.xlabel("Epoch")
     plt.ylabel("BCE Loss")
     plt.title("Loss Over Epochs")
@@ -299,8 +254,6 @@ def plot_loss_over_epochs(loss_history, val_loss_history, output_folder):
     plt.savefig(os.path.join(output_folder, 'loss.png'))
     plt.close()
     print("Saved loss.png — open it in the file explorer to view.")
-
-
 
 def plot_weight_change_over_epochs(max_weight_change_history, output_folder):
     epochs = range(1, len(max_weight_change_history) + 1)
@@ -315,7 +268,7 @@ def plot_weight_change_over_epochs(max_weight_change_history, output_folder):
     plt.close()
     print("Saved weight_change.png — open it in the file explorer to view.")
 
-def show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, output_folder):
+def show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, output_folder):
     print("\n--- Graph Selection ---")
     print("1. Decision Boundary (animated)")
     print("2. Loss Over Epochs")
@@ -329,18 +282,18 @@ def show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_his
             animate_decision_boundary(x_train, y_train, weight_history, output_folder)
         else:
             print("Decision boundary only available for 2 features.")
-        show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, output_folder)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, output_folder)
     elif choice == "2":
-        plot_loss_over_epochs(loss_history, val_loss_history, output_folder)
-        show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, output_folder)
+        plot_loss_over_epochs(loss_history, output_folder)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, output_folder)
     elif choice == "3":
         plot_weight_change_over_epochs(max_weight_change_history, output_folder)
-        show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, output_folder)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, output_folder)
     elif choice == "4":
         main()
     else:
         print("Invalid choice. Please enter 1, 2, 3, or 4.")
-        show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, output_folder)
+        show_graph_menu(x_train, y_train, weight_history, loss_history, max_weight_change_history, num_features, output_folder)
 
 def pickPath():
     print("Please select a dataset:")
@@ -351,9 +304,6 @@ def pickPath():
     print("5. Dataset 5")
     print("6. Dataset 6")
     print("7. Exit")
-    print("8. Smooth Convergence Dataset")
-    print("9. Imbalanced Dataset")
-    print("10.never stops early")
     choice = input("Enter the number of the dataset you want to use: ").strip()
     if choice == "1":
         return "dataset1.csv"
@@ -370,12 +320,6 @@ def pickPath():
     elif choice == "7":
         print("Bye!")
         return "7"
-    elif choice == "8":
-        return "smooth_convergence.csv"
-    elif choice == "9":
-        return "imbalanced.csv"
-    elif choice == "10":
-        return "never_stops_early.csv"
     else:
         print("Invalid choice. Please enter 1, 2, 3, 4, 5, 6, 7")
         return pickPath()
@@ -383,8 +327,8 @@ def pickPath():
 def main():
     path = pickPath()
     if(path != "7"):
-        learning_rate = 0.01  # large = 10 small = 0.0001
-        epochs = 1000 
+        learning_rate = 0.01  # Update with your desired learning rate
+        epochs = 1000 # Update with your desired number of epochs
 
         sigmoid(path, learning_rate, epochs, label="label")
     

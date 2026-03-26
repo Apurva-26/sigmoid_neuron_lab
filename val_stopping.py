@@ -81,6 +81,7 @@ def set_up_weights(num_features):
         weights.append(0.0)
     return weights
 
+
 def sigmoid(path, learning_rate, epochs, label):
     x, y, feature_names, label_name = load_csv(path)
     folder_name = os.path.splitext(os.path.basename(path))[0]
@@ -96,7 +97,8 @@ def sigmoid(path, learning_rate, epochs, label):
     val_loss_history = []
     max_weight_change_history = []  
     p_counter = 0
-    weight_p_counter = 0
+    v_counter = 0
+    best_val_loss = float('inf')
     for epoch in range(epochs):
         weightChangeList = []
         lossList = []
@@ -134,13 +136,18 @@ def sigmoid(path, learning_rate, epochs, label):
         epoch_bce = sum(lossList) / len(lossList)
         loss_history.append(epoch_bce)
         all_changes = []
+        # print(weightChangeList)
         for change_row in weightChangeList:
             for change_value in change_row:
                 all_changes.append(change_value)
-        epoch_max_change = max(all_changes)
         max_weight_change_history.append(max(all_changes))
-
-
+        if epoch_bce <= 0.1 or max_weight_change_history[-1] < 0.01:
+            p_counter+=1
+        else:
+            p_counter = 0
+        if p_counter > 10:
+            print(f"Early stopping epoch: {epoch} \nLoss: {epoch_bce:.4f}")
+            break
 
 
         val_lossList = []
@@ -156,21 +163,16 @@ def sigmoid(path, learning_rate, epochs, label):
                 val_lossList.append(error)
 
         # Compute epoch-level summaries for plotting
+        
         val_bce = sum(val_lossList) / len(val_lossList)
         val_loss_history.append(val_bce)
-
-        if epoch_bce <= 0.1:
-            p_counter+=1
+        if val_bce > best_val_loss:
+            v_counter+=1
         else:
-            p_counter = 0
-        
-        if epoch_max_change < 0.01:
-            weight_p_counter+=1
-        else:            
-            weight_p_counter = 0
-        
-        if p_counter > 10 and weight_p_counter > 10:
-            print(f"Early stopping epoch: {epoch} \nLoss: {epoch_bce:.4f}")
+            best_val_loss = val_bce
+            v_counter = 0
+        if v_counter > 20:
+            print(f"Early stopping epoch: {epoch} \n Training Loss: {epoch_bce:.4f}")
             break
 
     show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, folder_name)
@@ -351,9 +353,6 @@ def pickPath():
     print("5. Dataset 5")
     print("6. Dataset 6")
     print("7. Exit")
-    print("8. Smooth Convergence Dataset")
-    print("9. Imbalanced Dataset")
-    print("10.never stops early")
     choice = input("Enter the number of the dataset you want to use: ").strip()
     if choice == "1":
         return "dataset1.csv"
@@ -370,12 +369,6 @@ def pickPath():
     elif choice == "7":
         print("Bye!")
         return "7"
-    elif choice == "8":
-        return "smooth_convergence.csv"
-    elif choice == "9":
-        return "imbalanced.csv"
-    elif choice == "10":
-        return "never_stops_early.csv"
     else:
         print("Invalid choice. Please enter 1, 2, 3, 4, 5, 6, 7")
         return pickPath()
