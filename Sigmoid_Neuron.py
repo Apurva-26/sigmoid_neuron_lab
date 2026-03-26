@@ -106,7 +106,6 @@ def sigmoid(path, learning_rate, epochs, label):
             true_label = y_train[i]
             pred_label = predict_one_vector(features_row, weights, bias)
             # Update each weight
-            #EDIT THE THINGY BELOW THIS??=====================================================================
             for j in range(num_features):
                 change_in_weights = learning_rate * (pred_label - true_label) * features_row[j]
                 weightChangeList[i].append(abs(change_in_weights))
@@ -383,7 +382,7 @@ def pickPath():
 def main():
     path = pickPath()
     if(path != "7"):
-        learning_rate = 0.01  # large = 10 small = 0.0001
+        learning_rate = 0.01  # large = 10, small = 0.0001
         epochs = 1000 
 
         sigmoid(path, learning_rate, epochs, label="label")
