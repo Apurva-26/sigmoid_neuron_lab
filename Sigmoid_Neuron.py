@@ -168,8 +168,8 @@ def sigmoid(path, learning_rate, epochs, label):
         else:            
             weight_p_counter = 0
         
-        if p_counter > 10 and weight_p_counter > 10:
-            print(f"Early stopping epoch: {epoch} \nLoss: {epoch_bce:.4f}")
+        if p_counter >= 10 and weight_p_counter >= 10:
+            print(f"Early stopping epoch: {epoch+1} \nLoss: {epoch_bce:.4f}")
             break
 
     show_graph_menu(x_train, y_train, weight_history, loss_history, val_loss_history, max_weight_change_history, num_features, folder_name)
@@ -353,6 +353,8 @@ def pickPath():
     print("8. Smooth Convergence Dataset")
     print("9. Imbalanced Dataset")
     print("10.never stops early")
+    print("11. NOisy values")
+    print("12. Not Separable Dataset")
     choice = input("Enter the number of the dataset you want to use: ").strip()
     if choice == "1":
         return "dataset1.csv"
@@ -375,6 +377,10 @@ def pickPath():
         return "imbalanced.csv"
     elif choice == "10":
         return "never_stops_early.csv"
+    elif choice == "11":
+        return "noisy_val_loss.csv"
+    elif choice == "12":
+        return "not_separable.csv"
     else:
         print("Invalid choice. Please enter 1, 2, 3, 4, 5, 6, 7")
         return pickPath()
